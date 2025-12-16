@@ -1,76 +1,22 @@
 import React, { useState } from 'react';
 import { Building2, Plus, Camera, CheckCircle, AlertTriangle, Clock, Filter, Search, ArrowLeft, BarChart } from 'lucide-react';
+import { User } from '../types';
+import { mockDefects, getUserById } from '../data/mockData';
+import DefectTable from './DefectTable';
+import DefectModal from './DefectModal';
+import StatsDashboard from './StatsDashboard';
 
 interface DemoPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, data?: any) => void;
+  currentUser?: User | null;
+  onLogout?: () => void;
 }
 
-export default function DemoPage({ onNavigate }: DemoPageProps) {
+export default function DemoPage({ onNavigate, currentUser, onLogout }: DemoPageProps) {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const defects = [
-    {
-      id: 1,
-      title: 'Трещина в стене на 3-м этаже',
-      status: 'new',
-      priority: 'high',
-      location: 'Блок А, этаж 3, кв. 301',
-      assignee: 'Петров С.И.',
-      created: '2024-01-15',
-      deadline: '2024-01-20',
-      image: 'https://images.pexels.com/photos/209251/pexels-photo-209251.jpeg?auto=compress&cs=tinysrgb&w=300&h=200'
-    },
-    {
-      id: 2,
-      title: 'Неровность пола в коридоре',
-      status: 'in_progress',
-      priority: 'medium',
-      location: 'Блок Б, этаж 1',
-      assignee: 'Иванов А.П.',
-      created: '2024-01-14',
-      deadline: '2024-01-18',
-      image: 'https://images.pexels.com/photos/1669799/pexels-photo-1669799.jpeg?auto=compress&cs=tinysrgb&w=300&h=200'
-    },
-    {
-      id: 3,
-      title: 'Подтекание крана в санузле',
-      status: 'completed',
-      priority: 'low',
-      location: 'Блок А, этаж 2, кв. 205',
-      assignee: 'Сидоров М.В.',
-      created: '2024-01-12',
-      deadline: '2024-01-16',
-      image: 'https://images.pexels.com/photos/1126384/pexels-photo-1126384.jpeg?auto=compress&cs=tinysrgb&w=300&h=200'
-    }
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'new': return 'bg-red-100 text-red-700 border-red-200';
-      case 'in_progress': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'completed': return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'new': return 'Новый';
-      case 'in_progress': return 'В работе';
-      case 'completed': return 'Завершен';
-      default: return status;
-    }
-  };
-
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'high': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'medium': return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'low': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      default: return null;
-    }
-  };
+  const [selectedDefect, setSelectedDefect] = useState(null);
+  const [isDefectModalOpen, setIsDefectModalOpen] = useState(false);
+  const [isEditingDefect, setIsEditingDefect] = useState(false);
 
   const stats = [
     { label: 'Всего дефектов', value: '156', color: 'bg-blue-500' },
@@ -78,6 +24,22 @@ export default function DemoPage({ onNavigate }: DemoPageProps) {
     { label: 'Завершено сегодня', value: '8', color: 'bg-green-500' },
     { label: 'Просрочено', value: '3', color: 'bg-red-500' }
   ];
+
+  const handleDefectClick = (defect: any) => {
+    setSelectedDefect(defect);
+    setIsEditingDefect(false);
+    setIsDefectModalOpen(true);
+  };
+
+  const handleEditDefect = (defect: any) => {
+    setSelectedDefect(defect);
+    setIsEditingDefect(true);
+    setIsDefectModalOpen(true);
+  };
+
+  const handleSaveDefect = (updatedDefect: any) => {
+    console.log('Saving defect:', updatedDefect);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,8 +67,16 @@ export default function DemoPage({ onNavigate }: DemoPageProps) {
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">Демо-пользователь: Инженер</span>
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                И
+                {currentUser?.name.charAt(0) || 'И'}
               </div>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  className="text-sm text-gray-600 hover:text-red-600 transition-colors"
+                >
+                  Выйти
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -155,121 +125,29 @@ export default function DemoPage({ onNavigate }: DemoPageProps) {
         </div>
 
         {activeTab === 'dashboard' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Chart Placeholder */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Динамика дефектов</h3>
-              <div className="h-64 bg-gradient-to-br from-blue-50 to-orange-50 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-gray-400 mb-2">
-                    <BarChart className="w-12 h-12 mx-auto" />
-                  </div>
-                  <p className="text-gray-500">График динамики дефектов</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Последние активности</h3>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Дефект #156 помечен как завершенный</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Новый дефект #157 зарегистрирован</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">Дефект #145 назначен исполнителю</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <StatsDashboard />
         )}
 
         {activeTab === 'defects' && (
-          <div>
-            {/* Controls */}
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-              <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                <div className="flex space-x-2">
-                  <button className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Добавить дефект
-                  </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors flex items-center">
-                    <Camera className="w-4 h-4 mr-2" />
-                    Фото
-                  </button>
-                </div>
-                <div className="flex space-x-2">
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Поиск дефектов..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
-                    <Filter className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Defects List */}
-            <div className="space-y-4">
-              {defects.map((defect) => (
-                <div key={defect.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <img
-                        src={defect.image}
-                        alt={defect.title}
-                        className="w-20 h-20 rounded-lg object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center space-x-2 mb-2">
-                              {getPriorityIcon(defect.priority)}
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {defect.title}
-                              </h3>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(defect.status)}`}>
-                                {getStatusText(defect.status)}
-                              </span>
-                            </div>
-                            <p className="text-gray-600 mb-2">{defect.location}</p>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <span>Исполнитель: {defect.assignee}</span>
-                              <span>Создан: {defect.created}</span>
-                              <span>Срок: {defect.deadline}</span>
-                            </div>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                              Открыть
-                            </button>
-                            <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
-                              Изменить
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <DefectTable
+            defects={mockDefects.slice(0, 10)}
+            onDefectClick={handleDefectClick}
+            onEditDefect={handleEditDefect}
+          />
         )}
+
+        {/* Defect Modal */}
+        <DefectModal
+          defect={selectedDefect}
+          isOpen={isDefectModalOpen}
+          onClose={() => {
+            setIsDefectModalOpen(false);
+            setSelectedDefect(null);
+            setIsEditingDefect(false);
+          }}
+          onSave={handleSaveDefect}
+          isEditing={isEditingDefect}
+        />
       </div>
     </div>
   );

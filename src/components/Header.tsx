@@ -1,64 +1,49 @@
-import React from 'react';
-import { Building2, User } from 'lucide-react';
+import { Building2, LogOut } from 'lucide-react';
+import { Role } from '../types';
 
 interface HeaderProps {
+  currentRole: Role;
   currentPage: string;
-  onNavigate: (page: string) => void;
+  onSwitchRole: () => void;
 }
 
-export default function Header({ currentPage, onNavigate }: HeaderProps) {
+export default function Header({ currentRole, currentPage, onSwitchRole }: HeaderProps) {
+  const roleLabels: Record<Role, string> = {
+    director: 'Руководитель',
+    manager: 'Менеджер',
+    engineer: 'Инженер',
+  };
+
+  const roleColors: Record<Role, string> = {
+    director: 'bg-blue-100 text-blue-800',
+    manager: 'bg-green-100 text-green-800',
+    engineer: 'bg-orange-100 text-orange-800',
+  };
+
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo */}
-          <div 
-            className="flex items-center space-x-2 cursor-pointer" 
-            onClick={() => onNavigate('home')}
-          >
-            <div className="bg-blue-800 p-2 rounded">
+          <div className="flex items-center space-x-3">
+            <div className="bg-blue-600 p-2 rounded-lg">
               <Building2 className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">СтройКонтроль</span>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">СтройКонтроль</h1>
+              <p className="text-xs text-gray-500">Система управления дефектами</p>
+            </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <button 
-              onClick={() => onNavigate('home')}
-              className={`text-sm font-medium transition-colors ${
-                currentPage === 'home' ? 'text-blue-800' : 'text-gray-700 hover:text-blue-800'
-              }`}
+          <div className="flex items-center space-x-4">
+            <div className={`px-4 py-2 rounded-lg font-medium text-sm ${roleColors[currentRole]}`}>
+              {roleLabels[currentRole]}
+            </div>
+            <button
+              onClick={onSwitchRole}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium text-sm transition-colors"
             >
-              Главная
-            </button>
-            <button className="text-sm font-medium text-gray-700 hover:text-blue-800 transition-colors">
-              Возможности
-            </button>
-            <button className="text-sm font-medium text-gray-700 hover:text-blue-800 transition-colors">
-              Отзывы
-            </button>
-            <button className="text-sm font-medium text-gray-700 hover:text-blue-800 transition-colors">
-              Контакты
-            </button>
-          </nav>
-
-          {/* Auth Buttons */}
-          <div className="flex items-center space-x-3">
-            <button 
-              onClick={() => onNavigate('login')}
-              className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-                currentPage === 'login' ? 'text-blue-800 bg-blue-50' : 'text-gray-700 hover:text-blue-800'
-              }`}
-            >
-              <User className="w-4 h-4 inline mr-1" />
-              Войти
-            </button>
-            <button 
-              onClick={() => onNavigate('demo')}
-              className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              Попробовать демо
+              <LogOut className="w-4 h-4" />
+              <span>Сменить роль</span>
             </button>
           </div>
         </div>

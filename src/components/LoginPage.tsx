@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { Building2, Eye, EyeOff } from 'lucide-react';
+import { User } from '../types';
+import { mockLogin, mockDemoLogin } from '../utils/auth';
+import toast from 'react-hot-toast';
 
 interface LoginPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, data?: any) => void;
+  onLoginSuccess: (user: User) => void;
 }
 
-export default function LoginPage({ onNavigate }: LoginPageProps) {
+export default function LoginPage({ onNavigate, onLoginSuccess }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const demoRoles = [
     { role: 'engineer', label: 'Войти как Инженер', color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200' },
@@ -18,14 +23,36 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    onNavigate('demo');
+    
+    setIsSubmitting(true);
+    mockLogin(email, password)
+      .then((authData) => {
+        toast.success('Вход выполнен успешно!');
+        onLoginSuccess(authData.user);
+        onNavigate('demo');
+      })
+      .catch((error) => {
+        toast.error(error.message);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const handleDemoLogin = (role: string) => {
-    // Simulate demo login with role
-    console.log(`Demo login as: ${role}`);
-    onNavigate('demo');
+    setIsSubmitting(true);
+    mockDemoLogin(role)
+      .then((authData) => {
+        toast.success(`Вход в демо-режиме как ${authData.user.name}`);
+        onLoginSuccess(authData.user);
+        onNavigate('demo');
+      })
+      .catch((error) => {
+        toast.error(error.message);
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (
@@ -98,9 +125,10 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
 
             <button
               type="submit"
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-lg"
+              disabled={isSubmitting}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Войти
+              {isSubmitting ? 'Вход...' : 'Войти'}
             </button>
           </form>
 
@@ -120,7 +148,8 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
                 <button
                   key={demo.role}
                   onClick={() => handleDemoLogin(demo.role)}
-                  className={`w-full py-3 px-4 border rounded-lg font-medium transition-all duration-200 ${demo.color}`}
+                  disabled={isSubmitting}
+                  className={`w-full py-3 px-4 border rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${demo.color}`}
                 >
                   {demo.label}
                 </button>
@@ -132,8 +161,11 @@ export default function LoginPage({ onNavigate }: LoginPageProps) {
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
               Нет учетной записи?{' '}
-              <button className="text-orange-600 hover:text-orange-700 font-medium">
-                Свяжитесь с нами для получения доступа.
+              <button 
+                onClick={() => onNavigate('register')}
+                className="text-orange-600 hover:text-orange-700 font-medium"
+              >
+                Зарегистрироваться
               </button>
             </p>
           </div>
